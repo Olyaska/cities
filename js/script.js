@@ -3,15 +3,30 @@
 import { data } from './db_cities.js';
 const dataRU = data.RU;
 const input = document.getElementById('select-cities');
+const label = document.querySelector('.label');
 const listDefault = document.querySelector('.dropdown-lists__list--default');
 const listSelect = document.querySelector('.dropdown-lists__list--select');
 const listAutocomplete = document.querySelector('.dropdown-lists__list--autocomplete');
+const dropdown = document.querySelector('.dropdown');
+const btnX = document.querySelector('.close-button');
+const btnGo = document.querySelector('.button');
 // console.log(dataRU);
 
-
+const renderCountry = (div, countryObj, i) => {
+    div.insertAdjacentHTML('beforeend', `<div class="dropdown-lists__total-line" ${String(i) ?  'data-country-num="'+i+'"' : ''}>
+                        <div class="dropdown-lists__country">${countryObj.country}</div>
+                        <div class="dropdown-lists__count">${countryObj.count}</div>
+                        </div>`);   
+    
+    for (const city of countryObj.cities) {
+        div.insertAdjacentHTML('beforeend', `<div class="dropdown-lists__line">
+                        <div class="dropdown-lists__city">${city.name}</div>
+                        <div class="dropdown-lists__count">${city.count}</div>
+                        </div>`);   
+    }
+};
 // 1. default - список стран и тор3 городов
 const renderDefault = () => {
-
     const getDataDefault = () => {
         const arr = JSON.parse(JSON.stringify(dataRU));
         for (const item of arr) {
@@ -20,75 +35,27 @@ const renderDefault = () => {
         return arr;
     };
 
+    const div = document.createElement('div');
+    div.classList.add('dropdown-lists__countryBlock');
+    listDefault.insertAdjacentElement('beforeend', div);
     const data = getDataDefault();
-    // console.log(data);
     data.forEach((item, i) => {
-        const div = document.createElement('div');
-        div.classList.add('dropdown-lists__countryBlock');
-        // div.dataset.countryNum = i;
-        div.insertAdjacentHTML('beforeend', `<div class="dropdown-lists__total-line" data-country-num="${i}">
-                            <div class="dropdown-lists__country">${item.country}</div>
-                            <div class="dropdown-lists__count">${item.count}</div>
-                            </div>`);   
-        
-        for (const city of item.cities) {
-            div.insertAdjacentHTML('beforeend', `<div class="dropdown-lists__line">
-                            <div class="dropdown-lists__city">${city.name}</div>
-                            <div class="dropdown-lists__count">${city.count}</div>
-                            </div>`);   
-        }
-        listDefault.insertAdjacentElement('beforeend', div);
+        renderCountry(div, item, i);
     });
-
-    // input.addEventListener('blur', () => {
-        //     listDefault.style.display = 'none';
-        // });
-    };
-renderDefault();
-
+};
 
 // 2. select - информация о всех городах выбранной страны
 const renderSelect = (num) => {
     const data = dataRU[num];
-    console.log(data);
     listSelect.innerHTML = '';
     const div = document.createElement('div');
     div.classList.add('dropdown-lists__countryBlock');
-    div.insertAdjacentHTML('beforeend', `<div class="dropdown-lists__total-line">
-                        <div class="dropdown-lists__country">${data.country}</div>
-                        <div class="dropdown-lists__count">${data.count}</div>
-                        </div>`);   
-    
-    for (const city of data.cities) {
-        div.insertAdjacentHTML('beforeend', `<div class="dropdown-lists__line">
-                        <div class="dropdown-lists__city">${city.name}</div>
-                        <div class="dropdown-lists__count">${city.count}</div>
-                        </div>`);   
-    }
+    renderCountry(div, data);
     listSelect.insertAdjacentElement('beforeend', div);
 };
 
-input.addEventListener('focus', () => {
-    listDefault.style.display = 'block';
-    listSelect.style.display = 'none';
-    listAutocomplete.style.display = 'none';
-});
-listDefault.addEventListener('click', (e) => {
-    console.log(e.target.closest('.dropdown-lists__total-line').dataset.countryNum);
-    listDefault.style.display = 'none';
-    listSelect.style.display = 'block';
-
-    renderSelect(e.target.closest('.dropdown-lists__total-line').dataset.countryNum);
-});
-listSelect.addEventListener('click', (e) => {
-    if (e.target.closest('.dropdown-lists__total-line')) {
-        listDefault.style.display = 'block';
-        listSelect.style.display = 'none';
-    }
-});
-
-const render = (elem, data) => {
-    console.log(data);
+// 3. Автозаполнение
+const renderAutocomplite = (elem, data) => {
     elem.innerHTML = '';
     const div = document.createElement('div');
     div.classList.add('dropdown-lists__countryBlock');
@@ -97,21 +64,10 @@ const render = (elem, data) => {
         div.insertAdjacentText('beforeend', 'Ничего не найдено');
         return;
     }
-    data.forEach((item, i) => {
-        div.insertAdjacentHTML('beforeend', `<div class="dropdown-lists__total-line">
-                            <div class="dropdown-lists__country">${item.country}</div>
-                            <div class="dropdown-lists__count">${item.count}</div>
-                            </div>`);   
-        
-        for (const city of item.cities) {
-            div.insertAdjacentHTML('beforeend', `<div class="dropdown-lists__line">
-                            <div class="dropdown-lists__city">${city.name}</div>
-                            <div class="dropdown-lists__count">${city.count}</div>
-                            </div>`);   
-        }
-        // elem.insertAdjacentElement('beforeend', div);
+    data.forEach((item) => {
+        renderCountry(div, item);
     });
-}
+};
 const autocomplite = (value) => {
     if (value) {
         listDefault.style.display = 'none';
@@ -129,15 +85,68 @@ const autocomplite = (value) => {
         };
         const data = getDataAutocomplite(value);
 
-        render(listAutocomplete, data);
+        renderAutocomplite(listAutocomplete, data);
     } else {
         listDefault.style.display = 'block';
         listSelect.style.display = 'none';
         listAutocomplete.style.display = 'none';
     }
-}
-// 3. Автозаполнение
+};
+const findLink = (cityClicked) => {
+    for (const item of dataRU) {
+        for (const city of item.cities) {
+            if (city.name === cityClicked) {
+                return city.link;
+            }
+        }
+    }
+};
+
+input.addEventListener('focus', () => {
+    listDefault.style.display = 'block';
+    listSelect.style.display = 'none';
+    listAutocomplete.style.display = 'none';
+});
+
+listDefault.addEventListener('click', (e) => {
+    const clickCountry = e.target.closest('.dropdown-lists__total-line');
+    if (clickCountry) {
+        listDefault.style.display = 'none';
+        listSelect.style.display = 'block';
+    
+        renderSelect(clickCountry.dataset.countryNum);
+    }
+});
+
+listSelect.addEventListener('click', (e) => {
+    if (e.target.closest('.dropdown-lists__total-line')) {
+        listDefault.style.display = 'block';
+        listSelect.style.display = 'none';
+    }
+});
+
 input.addEventListener('input', (e) => {
     autocomplite(e.target.value.trim().toLowerCase());
 });
 
+dropdown.addEventListener('click', (e) => {
+    if (e.target.closest('.dropdown-lists__line')) {
+        const city = e.target.closest('.dropdown-lists__line').firstElementChild.textContent;
+        label.textContent = '';
+        input.value = e.target.closest('.dropdown-lists__line').firstElementChild.textContent;
+        btnX.style.display = 'block';
+    
+        btnGo.disabled = 'false';
+        btnGo.href = findLink(city);
+    }
+});
+
+btnX.addEventListener('click', () => {
+    input.value = '';
+    label.textContent = 'Страна или город';
+    btnX.style.display = 'none';
+    btnGo.href = '#';
+    btnGo.disabled = 'true';
+});
+
+renderDefault();
