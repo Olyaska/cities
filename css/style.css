@@ -28,12 +28,14 @@ body .main {
   background: linear-gradient(to bottom, #00416A, #E4E5E6);
 }
 
-body .main .input-cities {
+body .main .input-cities,
+.loading-spinner {
   width: 430px;
   height: 50px;
   margin: 200px auto 0 auto;
   letter-spacing: 0.6px;
   position: relative;
+  text-align: center;
 }
 
 body .main .input-cities #select-cities {
@@ -222,5 +224,21 @@ body .main .input-cities label {
   height: 100%;
   -webkit-transition: 0.4s;
   transition: 0.4s;
+}
+
+.loading-spinner {
+  width: 5rem;
+  height: 5rem;
+  display: inline-block;
+  border: 3px solid rgb(213, 217, 223);
+  border-radius: 50%;
+  border-top-color: #00416A;
+  animation: 1s spin infinite ease-in-out;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 /*# sourceMappingURL=style.css.map */

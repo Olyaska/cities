@@ -1,6 +1,102 @@
 'use strict';
+const url = './js/db_cities.json';
+const outputData = (data) => {
+    console.log(data);
+};
+// 1. XMLHttpRequest
+const getData1 = (url, outputData) => {
+    const request = new XMLHttpRequest();
+    request.open('GET', url);
+    request.setRequestHeader('Content-Type', 'application/json');
+    request.send();
+    request.addEventListener('readystatechange', e => {
+        if (request.readyState !== 4) {
+            return;
+        }
+        if (request.status === 200) {
+    
+            const response = JSON.parse(request.responseText);
+            outputData(response);    // <--- получили данные   
+        } else {
+            console.log(request.status);                   
+        }
+    });
+};
+getData1(url, outputData);
+// 2. + Promise
+const getData2 = (url) => {
+    return new Promise((resolve, reject) => {
+        const request = new XMLHttpRequest();
+        request.open('GET', url);
+        request.setRequestHeader('Content-Type', 'application/json');
+        request.send();
+        request.addEventListener('readystatechange', e => {
+            if (request.readyState !== 4) {
+                return;
+            }
+            if (request.status === 200) {        
+                const response = JSON.parse(request.responseText);
+                resolve(response);    // функция при успехе   
+            } else {
+                reject(request.status);  // при ошибке              
+            }
+        });
+    });
+};
+getData2(url) // запустить ф, возвр промис
+    .then(outputData) //resolve - обработать промис функцией outputData
+    .catch(error => console.error(error)); //reject
+// 3 Fetch
+fetch(url).
+    then((response) => {
+        if (response.status !== 200) {
+            throw new Error('Status network not 200');
+        }
+        console.log(response); //body  ответ от сервера
+        // console.log(response.text()); //получили промис в виде строки
+        return response.json(); //получили промис в виде json
+    })
+    .then((response) => {
+        outputData(response);
+    })
+    .catch((error) => console.error(error));
+const getData3 = () => {
+    return fetch(url); // возвращает промис
+}
 
-import { data } from './db_cities.js';
+// const postData = (body) => {
+    // fetch('./db_cities.json').
+    //     then((response) => {
+    //         console.log(response);
+    //     })
+
+// };
+// const getData = () => { 
+//     return new Promise((resolve, reject) => {
+//         const request = new XMLHttpRequest();
+//         request.open('GET', './js/db_cities.json');
+//         request.setRequestHeader('Content-Type', 'application/json');
+//         request.send();
+//         request.addEventListener('readystatechange', e => {
+//             if (request.readyState !== 4) {
+//                 return;
+//             }
+//             if (request.status === 200) {
+//                 document.querySelector('.loading-spinner').style.display = 'none';
+//                 document.querySelector('.input-cities').style.display = 'block';
+//                 const data = JSON.parse(request.responseText);
+//                 return data;       
+//             } else {
+//                 console.log(request.status);                   
+//             }
+//         });
+//     })
+// };
+/*
+        document.querySelector('.loading-spinner').style.display = 'none';
+        document.querySelector('.input-cities').style.display = 'block';
+const data = getData();
+console.log(data);
 const dataRU = data.RU;
 const input = document.getElementById('select-cities');
 const label = document.querySelector('.label');
@@ -161,3 +257,4 @@ document.body.addEventListener('click', (e) => {
     }
 });
 renderDefault();
+*/
