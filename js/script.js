@@ -100,7 +100,13 @@ const findLink = (cityClicked) => {
         }
     }
 };
-
+const clearInput = () => {
+    input.value = '';
+    label.textContent = 'Страна или город';
+    btnX.style.display = 'none';
+    btnGo.href = '#';
+    btnGo.disabled = 'true';
+}
 input.addEventListener('focus', () => {
     listDefault.style.display = 'block';
     listSelect.style.display = 'none';
@@ -140,11 +146,7 @@ dropdown.addEventListener('click', (e) => {
 });
 
 btnX.addEventListener('click', () => {
-    input.value = '';
-    label.textContent = 'Страна или город';
-    btnX.style.display = 'none';
-    btnGo.href = '#';
-    btnGo.disabled = 'true';
+    clearInput();
     listDefault.style.display = 'block';
     listSelect.style.display = 'none';
     listAutocomplete.style.display = 'none';
@@ -152,6 +154,7 @@ btnX.addEventListener('click', () => {
 
 document.body.addEventListener('click', (e) => {
     if (e.target.classList.contains('main')) {
+        clearInput();
         listDefault.style.display = 'none';
         listSelect.style.display = 'none';
         listAutocomplete.style.display = 'none';
