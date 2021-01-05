@@ -10,7 +10,6 @@ const listAutocomplete = document.querySelector('.dropdown-lists__list--autocomp
 const dropdown = document.querySelector('.dropdown');
 const btnX = document.querySelector('.close-button');
 const btnGo = document.querySelector('.button');
-// console.log(dataRU);
 
 const renderCountry = (div, countryObj, i) => {
     div.insertAdjacentHTML('beforeend', `<div class="dropdown-lists__total-line" ${String(i) ?  'data-country-num="'+i+'"' : ''}>
@@ -107,29 +106,28 @@ input.addEventListener('focus', () => {
     listSelect.style.display = 'none';
     listAutocomplete.style.display = 'none';
 });
-
-listDefault.addEventListener('click', (e) => {
-    const clickCountry = e.target.closest('.dropdown-lists__total-line');
-    if (clickCountry) {
-        listDefault.style.display = 'none';
-        listSelect.style.display = 'block';
-    
-        renderSelect(clickCountry.dataset.countryNum);
-    }
-});
-
-listSelect.addEventListener('click', (e) => {
-    if (e.target.closest('.dropdown-lists__total-line')) {
-        listDefault.style.display = 'block';
-        listSelect.style.display = 'none';
-    }
-});
-
 input.addEventListener('input', (e) => {
     autocomplite(e.target.value.trim().toLowerCase());
 });
 
 dropdown.addEventListener('click', (e) => {
+    if (e.target.closest('.dropdown-lists__list--default')) {
+        const clickCountry = e.target.closest('.dropdown-lists__total-line');
+        if (clickCountry) {
+            listDefault.style.display = 'none';
+            listSelect.style.display = 'block';
+        
+            renderSelect(clickCountry.dataset.countryNum);
+        }
+    }
+
+    if (e.target.closest('.dropdown-lists__list--select')) {
+        if (e.target.closest('.dropdown-lists__total-line')) {
+            listDefault.style.display = 'block';
+            listSelect.style.display = 'none';
+        }
+    }
+
     if (e.target.closest('.dropdown-lists__line')) {
         const city = e.target.closest('.dropdown-lists__line').firstElementChild.textContent;
         label.textContent = '';
@@ -147,6 +145,16 @@ btnX.addEventListener('click', () => {
     btnX.style.display = 'none';
     btnGo.href = '#';
     btnGo.disabled = 'true';
+    listDefault.style.display = 'block';
+    listSelect.style.display = 'none';
+    listAutocomplete.style.display = 'none';
 });
 
+document.body.addEventListener('click', (e) => {
+    if (e.target.classList.contains('main')) {
+        listDefault.style.display = 'none';
+        listSelect.style.display = 'none';
+        listAutocomplete.style.display = 'none';
+    }
+});
 renderDefault();
