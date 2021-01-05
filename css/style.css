@@ -128,16 +128,22 @@ body .main .input-cities label {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
+  overflow: hidden;
+  position: relative;
 }
-
+.wrap {
+  display: flex;
+  margin-left: 0;
+  /* transition: all ease 1s; */
+}
 .dropdown-lists__list {
   width: 100%;
 }
-/* .dropdown-lists__list--default {
-  display: block;
-} */
+.dropdown-lists__list--default {
+  min-width: 410px;
+}
 .dropdown-lists__list--select {
-  display: none;
+  min-width: 410px;
 }
 
 .dropdown-lists__list--autocomplete {

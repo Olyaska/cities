@@ -1,111 +1,31 @@
 'use strict';
 const url = './js/db_cities.json';
-const outputData = (data) => {
-    console.log(data);
-};
-// 1. XMLHttpRequest
-const getData1 = (url, outputData) => {
-    const request = new XMLHttpRequest();
-    request.open('GET', url);
-    request.setRequestHeader('Content-Type', 'application/json');
-    request.send();
-    request.addEventListener('readystatechange', e => {
-        if (request.readyState !== 4) {
-            return;
-        }
-        if (request.status === 200) {
-    
-            const response = JSON.parse(request.responseText);
-            outputData(response);    // <--- получили данные   
-        } else {
-            console.log(request.status);                   
-        }
-    });
-};
-getData1(url, outputData);
-// 2. + Promise
-const getData2 = (url) => {
-    return new Promise((resolve, reject) => {
-        const request = new XMLHttpRequest();
-        request.open('GET', url);
-        request.setRequestHeader('Content-Type', 'application/json');
-        request.send();
-        request.addEventListener('readystatechange', e => {
-            if (request.readyState !== 4) {
-                return;
-            }
-            if (request.status === 200) {        
-                const response = JSON.parse(request.responseText);
-                resolve(response);    // функция при успехе   
-            } else {
-                reject(request.status);  // при ошибке              
-            }
-        });
-    });
-};
-getData2(url) // запустить ф, возвр промис
-    .then(outputData) //resolve - обработать промис функцией outputData
-    .catch(error => console.error(error)); //reject
-// 3 Fetch
-fetch(url).
-    then((response) => {
-        if (response.status !== 200) {
-            throw new Error('Status network not 200');
-        }
-        console.log(response); //body  ответ от сервера
-        // console.log(response.text()); //получили промис в виде строки
-        return response.json(); //получили промис в виде json
-    })
-    .then((response) => {
-        outputData(response);
-    })
-    .catch((error) => console.error(error));
-const getData3 = () => {
-    return fetch(url); // возвращает промис
-}
-
-// const postData = (body) => {
-    // fetch('./db_cities.json').
-    //     then((response) => {
-    //         console.log(response);
-    //     })
-
-// };
-// const getData = () => { 
-//     return new Promise((resolve, reject) => {
-//         const request = new XMLHttpRequest();
-//         request.open('GET', './js/db_cities.json');
-//         request.setRequestHeader('Content-Type', 'application/json');
-//         request.send();
-//         request.addEventListener('readystatechange', e => {
-//             if (request.readyState !== 4) {
-//                 return;
-//             }
-//             if (request.status === 200) {
-//                 document.querySelector('.loading-spinner').style.display = 'none';
-//                 document.querySelector('.input-cities').style.display = 'block';
-//                 const data = JSON.parse(request.responseText);
-//                 return data;       
-//             } else {
-//                 console.log(request.status);                   
-//             }
-//         });
-//     })
-// };
-/*
-        document.querySelector('.loading-spinner').style.display = 'none';
-        document.querySelector('.input-cities').style.display = 'block';
-const data = getData();
-console.log(data);
-const dataRU = data.RU;
 const input = document.getElementById('select-cities');
 const label = document.querySelector('.label');
+const wrap = document.querySelector('.wrap');
 const listDefault = document.querySelector('.dropdown-lists__list--default');
 const listSelect = document.querySelector('.dropdown-lists__list--select');
 const listAutocomplete = document.querySelector('.dropdown-lists__list--autocomplete');
 const dropdown = document.querySelector('.dropdown');
 const btnX = document.querySelector('.close-button');
 const btnGo = document.querySelector('.button');
+
+const getData = () => { 
+    fetch(url).
+    then((response) => {
+        if (response.status !== 200) {
+            throw new Error('Status network not 200');
+        }
+        return response.json(); 
+    })
+    .then((response) => {
+        renderDefault(response.RU);
+        document.querySelector('.loading-spinner').style.display = 'none';
+        document.querySelector('.input-cities').style.display = 'block';
+        localStorage.setItem('cities', JSON.stringify(response.RU));
+    })
+    .catch((error) => console.error(error));
+};
 
 const renderCountry = (div, countryObj, i) => {
     div.insertAdjacentHTML('beforeend', `<div class="dropdown-lists__total-line" ${String(i) ?  'data-country-num="'+i+'"' : ''}>
@@ -120,28 +40,26 @@ const renderCountry = (div, countryObj, i) => {
                         </div>`);   
     }
 };
-// 1. default - список стран и тор3 городов
-const renderDefault = () => {
+
+const renderDefault = (data) => {
     const getDataDefault = () => {
-        const arr = JSON.parse(JSON.stringify(dataRU));
-        for (const item of arr) {
+        for (const item of data) {
             item.cities = item.cities.sort((a, b) => +a.count > +b.count ? -1 : 1).splice(0, 3);
         }
-        return arr;
+        return data;
     };
 
     const div = document.createElement('div');
     div.classList.add('dropdown-lists__countryBlock');
     listDefault.insertAdjacentElement('beforeend', div);
-    const data = getDataDefault();
-    data.forEach((item, i) => {
+    const dataDefault = getDataDefault();
+    dataDefault.forEach((item, i) => {
         renderCountry(div, item, i);
     });
 };
 
-// 2. select - информация о всех городах выбранной страны
 const renderSelect = (num) => {
-    const data = dataRU[num];
+    const data = JSON.parse(localStorage.getItem('cities'))[num];
     listSelect.innerHTML = '';
     const div = document.createElement('div');
     div.classList.add('dropdown-lists__countryBlock');
@@ -149,7 +67,6 @@ const renderSelect = (num) => {
     listSelect.insertAdjacentElement('beforeend', div);
 };
 
-// 3. Автозаполнение
 const renderAutocomplite = (elem, data) => {
     elem.innerHTML = '';
     const div = document.createElement('div');
@@ -163,32 +80,37 @@ const renderAutocomplite = (elem, data) => {
         renderCountry(div, item);
     });
 };
+
 const autocomplite = (value) => {
     if (value) {
         listDefault.style.display = 'none';
         listSelect.style.display = 'none';
         listAutocomplete.style.display = 'block';
 
-        const getDataAutocomplite = (value) => {
-            let arr = JSON.parse(JSON.stringify(dataRU));
-            
+    fetch(url)
+        .then(response => {
+            return response.json();
+        })
+        .then(response => {
+            let arr = response.RU;
             arr.forEach(item => {
                 item.cities = item.cities.filter(city => city.name.toLowerCase().indexOf(value) === 0);
             });
             arr = arr.filter(item => item.cities.length !== 0 || item.country.toLowerCase().indexOf(value) === 0);
-            return arr;
-        };
-        const data = getDataAutocomplite(value);
 
-        renderAutocomplite(listAutocomplete, data);
+            renderAutocomplite(listAutocomplete, arr);
+        });
+
     } else {
         listDefault.style.display = 'block';
         listSelect.style.display = 'none';
         listAutocomplete.style.display = 'none';
     }
 };
+
 const findLink = (cityClicked) => {
-    for (const item of dataRU) {
+    const data = JSON.parse(localStorage.getItem('cities'))
+    for (const item of data) {
         for (const city of item.cities) {
             if (city.name === cityClicked) {
                 return city.link;
@@ -196,16 +118,45 @@ const findLink = (cityClicked) => {
         }
     }
 };
+
+const animationSlide = (direction) => {
+    let count = 0,
+        animInterval;
+
+    const animation = () => {
+        animInterval = requestAnimationFrame(animation);
+        if (direction === 'left') {
+            count = count - 8;
+            if (count > -420) {
+                wrap.style.marginLeft = count + 'px';
+            } else {
+                cancelAnimationFrame(animInterval);
+            }
+        } else {
+            count = parseInt(wrap.style.marginLeft);
+            count = count + 8;
+            if (count < 0) {
+                wrap.style.marginLeft = count + 'px';
+            } else {
+                wrap.style.marginLeft = 0;
+                cancelAnimationFrame(animInterval);
+            }
+        }
+    };
+    animInterval = requestAnimationFrame(animation);
+};
+
 const clearInput = () => {
     input.value = '';
     label.textContent = 'Страна или город';
     btnX.style.display = 'none';
     btnGo.href = '#';
     btnGo.disabled = 'true';
-}
+};
+
 input.addEventListener('focus', () => {
     listDefault.style.display = 'block';
-    listSelect.style.display = 'none';
+    listSelect.style.display = 'block';
     listAutocomplete.style.display = 'none';
 });
 input.addEventListener('input', (e) => {
@@ -216,17 +167,14 @@ dropdown.addEventListener('click', (e) => {
     if (e.target.closest('.dropdown-lists__list--default')) {
         const clickCountry = e.target.closest('.dropdown-lists__total-line');
         if (clickCountry) {
-            listDefault.style.display = 'none';
-            listSelect.style.display = 'block';
-        
+            animationSlide('left');
             renderSelect(clickCountry.dataset.countryNum);
         }
     }
 
     if (e.target.closest('.dropdown-lists__list--select')) {
         if (e.target.closest('.dropdown-lists__total-line')) {
-            listDefault.style.display = 'block';
-            listSelect.style.display = 'none';
+            animationSlide('right');
         }
     }
 
@@ -243,8 +191,9 @@ dropdown.addEventListener('click', (e) => {
 
 btnX.addEventListener('click', () => {
     clearInput();
-    listDefault.style.display = 'block';
-    listSelect.style.display = 'none';
+    if (parseInt(wrap.style.marginLeft)) {
+        animationSlide('right');
+    }
     listAutocomplete.style.display = 'none';
 });
 
@@ -256,5 +205,5 @@ document.body.addEventListener('click', (e) => {
         listAutocomplete.style.display = 'none';
     }
 });
-renderDefault();
-*/
+
+getData();
