@@ -134,7 +134,6 @@ body .main .input-cities label {
 .wrap {
   display: flex;
   margin-left: 0;
-  /* transition: all ease 1s; */
 }
 .dropdown-lists__list {
   width: 100%;

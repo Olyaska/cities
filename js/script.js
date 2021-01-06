@@ -1,4 +1,16 @@
 'use strict';
+const setCookie = (key, value) => {
+    let cookieStr = key + '=' + value;
+    let date = Date.now() + 1000*60*60*24*7;
+    date = new Date(date);
+    cookieStr += '; expires = ' + date.toGMTString();
+    document.cookie = cookieStr;
+};
+const getCookie = (cookieName) => {
+    const results = document.cookie.match ('(^|;) ?' + cookieName + '=([^;]*)(;|$)');
+    return (results) ? results[2] : null;
+};
+
 const url = './js/db_cities.json';
 const input = document.getElementById('select-cities');
 const label = document.querySelector('.label');
@@ -9,8 +21,21 @@ const listAutocomplete = document.querySelector('.dropdown-lists__list--autocomp
 const dropdown = document.querySelector('.dropdown');
 const btnX = document.querySelector('.close-button');
 const btnGo = document.querySelector('.button');
+const langCountry = {
+    RU: 'Россия',
+    EN: 'United Kingdom',
+    DE: 'Deutschland'
+};
+let local;
 
-const getData = () => { 
+const sortCountries = (arr, local) => {
+    const country = langCountry[local];
+    const index = arr.findIndex(item => item.country === country);
+    arr.unshift(...arr.splice(index,1));
+    return arr;
+}
+
+const getData = (local) => { 
     fetch(url).
     then((response) => {
         if (response.status !== 200) {
@@ -19,12 +44,32 @@ const getData = () => {
         return response.json(); 
     })
     .then((response) => {
-        renderDefault(response.RU);
+        const data = sortCountries(response[local], local);
+        renderDefault(data);
         document.querySelector('.loading-spinner').style.display = 'none';
         document.querySelector('.input-cities').style.display = 'block';
-        localStorage.setItem('cities', JSON.stringify(response.RU));
+        localStorage.setItem('cities', JSON.stringify(data));
+        if (local !== 'RU') {
+            label.textContent = 'Country or city';
+        }
     })
     .catch((error) => console.error(error));
+};
+
+const init = () => {
+    local = getCookie('local');
+    if (!local) { 
+        local = prompt('Введите локаль: RU, EN или DE', 'RU').toUpperCase().trim();
+        setCookie('local', local);
+        getData(local);
+    } else {
+        renderDefault(JSON.parse(localStorage.getItem('cities')));
+        document.querySelector('.loading-spinner').style.display = 'none';
+        document.querySelector('.input-cities').style.display = 'block';
+        if (local !== 'RU') {
+            label.textContent = 'Country or city';
+        }
+    }
 };
 
 const renderCountry = (div, countryObj, i) => {
@@ -148,7 +193,7 @@ const animationSlide = (direction) => {
 
 const clearInput = () => {
     input.value = '';
-    label.textContent = 'Страна или город';
+    label.textContent = (local === 'RU') ? 'Страна или город' : 'Country or city';
     btnX.style.display = 'none';
     btnGo.href = '#';
     btnGo.disabled = 'true';
@@ -206,4 +251,4 @@ document.body.addEventListener('click', (e) => {
     }
 });
 
-getData();
+init();
